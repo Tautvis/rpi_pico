@@ -10,14 +10,13 @@ def connect(max_wait: int = 30) -> None:
     wlan.active(True)
     wlan.connect(secrets.ssid, secrets.password)
     
-    while max_wait > 0:
+    for i in range(1, max_wait+1):
         if wlan.status() < 0 or wlan.status() >= 3:
             break
-        max_wait -= 1
-        log.debug(' . . . waiting for wifi connection...')
+        log.debug(f'({i}/{max_wait}s) . . . waiting for wifi connection...')
         utime.sleep(1)
 
-    if wlan.status() != 3:
+    if wlan.status() != network.STAT_GOT_IP:
         raise RuntimeError(f'Network connection failed. Status: {wlan.status()}. wlan: {wlan}.')
     else:
         log.debug('Connected to Wifi.')
