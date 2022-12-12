@@ -1,12 +1,12 @@
 """Initial Raspberry Pi Pico setup"""
-import upip
+import mip
 import wlan
 
 
 def setup():
     print('Starting set up.')
     wlan.connect()
-    upip.install('umqtt.simple')
+    mip.install('umqtt.simple')
     print('Set up complete.')
     
     
