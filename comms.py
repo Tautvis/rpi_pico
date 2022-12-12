@@ -15,7 +15,7 @@ from umqtt.simple import MQTTClient
 
 
 class Comms:
-    def __init__(self, name: str = '', keepalive: bool = False):
+    def __init__(self, name: str = '', keepalive: bool = False, topic: str = ''):
         """Create comms client.
 
         Args:
@@ -26,6 +26,9 @@ class Comms:
         self.client = MQTTClient(name, secrets.mqtt_broker_address, port=secrets.mqtt_broker_port,
                                  user=secrets.mqtt_user, password=secrets.mqtt_password,
                                  keepalive=3600)
+        if topic:
+            self.client.set_last_will(topic + '/status', 'offline', retain=True, qos=1)
+        
         # Set last will message here.
         if self.keepalive:
             self.client.connect()
@@ -40,11 +43,13 @@ class Comms:
         """
         if self.keepalive:
             try:
+                log.trace('Comms: Pinging broker.')
                 self.client.ping()
             except OSError:
                 log.debug('Reconnecting to MQTT broker.')
                 self.client.connect()
         else:
+            log.trace('Comms: Connecting to broker.')
             self.client.connect()
     
         assert isinstance(msg, (str, dict)), f'Message of type {type(msg)} is not supported.'
@@ -53,8 +58,12 @@ class Comms:
             msg = json.dumps(msg)
             
         # Send message.
+        log.trace(f'Comms: publishing message: {msg}.')
         self.client.publish(topic, msg, qos=qos)
+        log.trace(f'Comms: publishing status: online.')
+        self.client.publish(topic+'/status', 'online', qos=qos)
         
         if not self.keepalive:
+            log.trace('Comms: No keep alive. Disconnecting.')
             self.client.disconnect()
         

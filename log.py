@@ -1,4 +1,4 @@
-"""Tiny logger"""
+"""Tiny logger."""
 
 # Where to log.
 _destination = print
@@ -21,4 +21,8 @@ def set_level(new_level) -> None:
         
 def debug(msg: str) -> None:
     if _level >= 30:
+        _destination(msg)
+        
+def trace(msg: str) -> None:
+    if _level >= 40:
         _destination(msg)
