@@ -68,9 +68,9 @@ while True:
             led.value(0)
             stateis = "LED is OFF"
         
-        temp, humi = utils.get_dht22_temp_humidity()
+        temp, humi = sensors.get_dht22_temp_humidity()
         if temp <= 0:
-            temp = utils.get_internal_temp()
+            temp = sensors.get_internal_temp()
             humi = -1
         air_q = air_q_sensor.read()
         response = html.format(led_state=stateis, temp=temp, humidity=humi,

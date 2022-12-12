@@ -2,6 +2,11 @@
 import machine, utils, time
 from micropython import const
 
+
+# ADC conversion from U16 value to [0-1] range. ADC is 12 bit but read is 16bit.
+ADC_U16_FACTOR = 1.0 / 65535
+
+
 class AirQuality:
     """Groove Air Quality Sensor v1.3
 
@@ -147,12 +152,54 @@ def get_AHT20(scl_pin: int, sda_pin: int):
     return AHTx0(i2c_dev)
 
 
-def __get_temp_LMx35Z():
+def get_internal_temp() -> float:
+    """Gets temp (in C) which is connected to ADC(4)"""
+    sensor_temp = machine.ADC(4)
+    reading = sensor_temp.read_u16() * 3.3 * ADC_U16_FACTOR 
+    temperature = 27 - (reading - 0.706)/0.001721
+    return temperature
+
+
+def get_temp_lm335(pin) -> float:
+    """Gets temperature from LM335Z sensor (+- 1C).
+    Sensor reports linear temp in kelvins (10mV/K).
+    So 2V output is 200K and 0V is 0K. Real range is -40 - 100C, which is 2.33-3.73V.
+    Pico ADC reference voltage is 3.3V. So max ADC input (2^16) will refer to 3.3V.
+    So ADC will cap at 3.3V which is 330K -> 57C.
+    Pico ADC resolution is 12bits which is 0.8mV which is 0.08C.
+    Sensor is stable at around 1C.
+    Sensor connection:
+    left - calibration/not connected
+    middle - ADC and 2-3kOmh to 5V
+    right - ground
     """
-    LM235Z
-    LM335Z
+    pin_voltage = utils.get_adc(pin) * 3.3
+    temp_K = pin_voltage * 100
+    temp_C = temp_K - 273.15
+    return temp_C
+
+
+def get_dht22_temp_humidity(default:tuple[float, float] = (-1, -1), pin: int = 2) -> tuple[float, float]:
+    """Gets DFRobot DHT22 sensor module temp and humidity.
+    Requires 5V.
+    
+    Args:
+      default: Tuple[float, float]:
+
+    Returns: Tuple[float, float]
     """
-    pass
+    try:
+        from DHT22 import DHT22
+    except ImportError:
+        print('Failed to import DHT22 library.')
+        return default
+    dht_data = Pin(pin, Pin.IN, Pin.PULL_UP)
+    dht_sensor = DHT22(dht_data)
+    temp, hum = dht_sensor.read()
+    if temp is None:
+        print("DHT22 sensor error.")
+        return default
+    return temp, hum
 
 
 def get_moisture_v1(pin) -> float:

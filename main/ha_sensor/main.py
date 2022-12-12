@@ -16,7 +16,7 @@ try:
     wlan.connect(60*60)
     utils.blink(1)
 
-    comms = comms.Comms(keepalive=False)
+    comms = comms.Comms(keepalive=False, topic=topic)
 
     # air_q_sensor = sensors.AirQuality(26, perc=True)
     aht20 = sensors.get_AHT20(1, 0)

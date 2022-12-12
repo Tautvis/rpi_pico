@@ -4,8 +4,6 @@ from machine import Pin
 import time
 import os
 
-# ADC conversion from U16 value to [0-1] range. ADC is 12 bit but read is 16bit.
-ADC_U16_FACTOR = 1.0 / 65535
 
 
 def is_picow() -> bool:
@@ -16,13 +14,10 @@ def is_picow() -> bool:
     assert name in {pico_name, pico_w_name}, f'Unknown machine name: {name}'
     return name == pico_w_name
 
-
-def get_internal_temp() -> float:
-    """Gets temp (in C) which is connected to ADC(4)"""
-    sensor_temp = machine.ADC(4)
-    reading = sensor_temp.read_u16() * 3.3 * ADC_U16_FACTOR 
-    temperature = 27 - (reading - 0.706)/0.001721
-    return temperature
+    
+def is_adc_pin(pin: int) -> bool:
+    """Returns whether pin is capable opf ADC."""
+    return pin == 26 or pin == 27 or pin == 28
 
 
 def get_adc(pin, min_val: int = 0, max_val: int = 65535, clip: bool = False) -> float:
@@ -82,7 +77,7 @@ def blink_pattern(pattern: list[int], duration: float = 1.0, pin:machine.Pin = N
 
     Args:
       pattern: list of 1s and 0s.
-      duration: duration to blink the pattern out.
+      duration: duration to blink the pattern out (in seconds).
     """
     if not pattern: return
     if pin is None:
@@ -102,34 +97,6 @@ def blink_error() -> None:
     error_pattern = [1,0,0,1,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0]
     while(True):
         blink_pattern(error_pattern, 2)
-
-
-def get_dht22_temp_humidity(default:tuple[float, float] = (-1, -1), pin: int = 2) -> tuple[float, float]:
-    """Gets DFRobot DHT22 sensor module temp and humidity.
-    Requires 5V.
-    
-    Args:
-      default: Tuple[float, float]:
-
-    Returns: Tuple[float, float]
-    """
-    try:
-        from DHT22 import DHT22
-    except ImportError:
-        print('Failed to import DHT22 library.')
-        return default
-    dht_data = Pin(pin, Pin.IN, Pin.PULL_UP)
-    dht_sensor = DHT22(dht_data)
-    temp, hum = dht_sensor.read()
-    if temp is None:
-        print("DHT22 sensor error.")
-        return default
-    return temp, hum
-    
-    
-def is_adc_pin(pin: int) -> bool:
-    """Returns whether pin is capable opf ADC."""
-    return pin in {26, 27, 28}
     
 
 def file_or_dir_exists(filename: str) -> bool:
