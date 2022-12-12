@@ -24,8 +24,8 @@ try:
     while(True):
         log.debug('Reading and exporting data.')
         # air_q = air_q_sensor.read()
-        internal_temp = utils.get_internal_temp()
-        #temp, humi = utils.get_dht22_temp_humidity(pin=2)
+        internal_temp = sensors.get_internal_temp()
+        #temp, humi = sensors.get_dht22_temp_humidity(pin=2)
         temp, humi = aht20.temp_and_humidity
 
         results = {
