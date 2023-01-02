@@ -3,8 +3,15 @@ import secrets
 import utime
 import log
 
+WLAN = None
+
+
 def connect(max_wait: int = 30) -> None:
-    """Connects to wifi and sets time."""
+    """Connects to Wi-Fi and sets time."""
+    global WLAN
+    if WLAN and WLAN.active():
+        log.debug('Already connected to wifi.')
+        return
     log.debug('Connecting to wifi . . .')
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
@@ -18,7 +25,7 @@ def connect(max_wait: int = 30) -> None:
 
     if wlan.status() != network.STAT_GOT_IP:
         raise RuntimeError(f'Network connection failed. Status: {wlan.status()}. wlan: {wlan}.')
-    else:
-        log.debug('Connected to Wifi.')
-        status = wlan.ifconfig()
-        log.debug('Wifi ip: ' + status[0])
+    log.debug('Connected to Wifi.')
+    status = wlan.ifconfig()
+    log.debug('Wifi ip: ' + status[0])
+    WLAN = wlan

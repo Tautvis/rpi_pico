@@ -2,16 +2,14 @@
 import secrets
 import log
 import json
-# import upip
-# upip.install("umqtt.simple")
 from umqtt.simple import MQTTClient
 
 # JSON fields
-# ts: timestamp of the measurment. Unix milles since epoch.
+# ts: timestamp of the measurement. Unix millis since epoch.
 # temperature: temperature
 # temp_sensor_type: {}
 # humidity: Humidity if available.
-# air_quality: Percentage of polution.
+# air_quality: Percentage of pollution.
 
 
 class Comms:

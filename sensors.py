@@ -1,5 +1,6 @@
 """Sensor library. Mainly shows examples how to use sensors."""
 import machine, utils, time
+from machine import Pin
 from micropython import const
 
 

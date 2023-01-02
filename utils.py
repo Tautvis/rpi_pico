@@ -1,13 +1,13 @@
-import machine
 import sys
+import machine
 from machine import Pin
 import time
 import os
-
+import gc
 
 
 def is_picow() -> bool:
-    """Returns wheter it's running Pico or Pico W"""
+    """Returns whether it's running Pico or Pico W"""
     pico_name   = 'Raspberry Pi Pico with RP2040'
     pico_w_name = 'Raspberry Pi Pico W with RP2040'
     name = sys.implementation._machine
@@ -36,8 +36,9 @@ def get_adc(pin, min_val: int = 0, max_val: int = 65535, clip: bool = False) -> 
     value = pin.read_u16()
     value = (value - min_val) / (max_val - min_val)
     if clip:
-        value = max(0, min(1, value))
+        value = max(0.0, min(1.0, value))
     return value
+
 
 read_adc = get_adc
 
@@ -55,8 +56,8 @@ def blink(n:int = 1, delay_ms:int = 100, end_off:bool = None, pin:machine.Pin = 
 
     Args:
       n: n times to blink.
-      delay_ms: ms to wait between toggeles. Total time is 2 * n * delay_ms.
-      end_off: wheter to force the led to off at the end.
+      delay_ms: ms to wait between toggles. Total time is 2 * n * delay_ms.
+      end_off: whether to force the LED to off at the end.
       pin: LED pin. Defaults to on board LED.
     """
     if pin is None:
@@ -93,10 +94,28 @@ def blink_pattern(pattern: list[int], duration: float = 1.0, pin:machine.Pin = N
 
         
 def blink_error() -> None:
-    """Continuously blink urecoverable error pattern on the board LED."""
+    """Continuously blink unrecoverable error pattern on the board LED."""
     error_pattern = [1,0,0,1,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0]
-    while(True):
+    while True:
         blink_pattern(error_pattern, 2)
+
+
+def clip(value, min_val=None, max_val=None):
+    """Clips value to a range and cast to the same type."""
+    dtype = type(value)
+    if max_val is not None:
+        value = min(max_val, value)
+    if min_val is not None:
+        value = max(min_val, value)
+    return dtype(value)
+
+
+def init_gc(fraction: float = 0.9) -> None:
+    """Initializes GC."""
+    total_memory = gc.mem_alloc() + gc.mem_free()
+    threshold = int(total_memory * total_memory)
+    gc.threshold(threshold)
+    gc.enable()
     
 
 def file_or_dir_exists(filename: str) -> bool:
@@ -105,13 +124,15 @@ def file_or_dir_exists(filename: str) -> bool:
         return True
     except OSError:
         return False
-        
+
+
 def dir_exists(filename: str) -> bool:
     try:
         return (os.stat(filename)[0] & 0x4000) != 0
     except OSError:
         return False
-        
+
+
 def file_exists(filename: str) -> bool:
     try:
         return (os.stat(filename)[0] & 0x4000) == 0
