@@ -7,7 +7,7 @@ WLAN = None
 
 
 def connect(max_wait: int = 30) -> None:
-    """Connects to Wi-Fi and sets time."""
+    """Connect to Wi-Fi and sets time."""
     global WLAN
     if WLAN and WLAN.active():
         log.debug('Already connected to wifi.')

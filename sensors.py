@@ -110,7 +110,7 @@ class AHTx0:
     
     @property
     def temp_and_humidity(self) -> tuple[float, float]:
-        """Gets temp and humidity."""
+        """Get temp and humidity."""
         self._readdata()
         return self._temp, self._humidity
 
@@ -136,7 +136,7 @@ class AHTx0:
 
 
 def get_AHT20(scl_pin: int, sda_pin: int):
-    """Gets AHT20 device or None if it's not present."""
+    """Get AHT20 device or None if it's not present."""
     if isinstance(scl_pin, int):
         if isinstance(sda_pin, int):
             assert scl_pin - sda_pin == 1    
@@ -154,7 +154,7 @@ def get_AHT20(scl_pin: int, sda_pin: int):
 
 
 def get_internal_temp() -> float:
-    """Gets temp (in C) which is connected to ADC(4)"""
+    """Get temp (in C) which is connected to ADC(4)"""
     sensor_temp = machine.ADC(4)
     reading = sensor_temp.read_u16() * 3.3 * ADC_U16_FACTOR 
     temperature = 27 - (reading - 0.706)/0.001721
@@ -162,7 +162,7 @@ def get_internal_temp() -> float:
 
 
 def get_temp_lm335(pin) -> float:
-    """Gets temperature from LM335Z sensor (+- 1C).
+    """Get temperature from LM335Z sensor (+- 1C).
     Sensor reports linear temp in kelvins (10mV/K).
     So 2V output is 200K and 0V is 0K. Real range is -40 - 100C, which is 2.33-3.73V.
     Pico ADC reference voltage is 3.3V. So max ADC input (2^16) will refer to 3.3V.
@@ -181,7 +181,7 @@ def get_temp_lm335(pin) -> float:
 
 
 def get_dht22_temp_humidity(default:tuple[float, float] = (-1, -1), pin: int = 2) -> tuple[float, float]:
-    """Gets DFRobot DHT22 sensor module temp and humidity.
+    """Get DFRobot DHT22 sensor module temp and humidity.
     Requires 5V.
     
     Args:

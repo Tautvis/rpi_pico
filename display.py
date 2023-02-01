@@ -77,7 +77,7 @@ class Display:
 
     def set_temp(self, temp: float) -> None:
         """Sets temp to be printed next time."""
-        self.temp = temp
+        self.temp = temp or 0.0
 
     def add(self, value: float, ts: int = None) -> None:
         # ts is in seconds.

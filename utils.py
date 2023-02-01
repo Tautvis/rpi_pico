@@ -4,10 +4,13 @@ from machine import Pin
 import time
 import os
 import gc
+from collections import namedtuple
 
+# Flash memory stats in bytes.
+FlashStats = namedtuple('FlashStats', ('total_memory', 'free_memory', 'used_memory'))
 
 def is_picow() -> bool:
-    """Returns whether it's running Pico or Pico W"""
+    """Return whether it's running Pico or Pico W"""
     pico_name   = 'Raspberry Pi Pico with RP2040'
     pico_w_name = 'Raspberry Pi Pico W with RP2040'
     name = sys.implementation._machine
@@ -16,12 +19,12 @@ def is_picow() -> bool:
 
     
 def is_adc_pin(pin: int) -> bool:
-    """Returns whether pin is capable opf ADC."""
+    """Return whether pin is capable opf ADC."""
     return pin == 26 or pin == 27 or pin == 28
 
 
 def get_adc(pin, min_val: int = 0, max_val: int = 65535, clip: bool = False) -> float:
-    """Gets calibrated ADC value in range 0-1.
+    """Get calibrated ADC value in range 0-1.
 
     Calibration means that the Pin output doesn't use the whole 0-65535 range.
     
@@ -44,7 +47,7 @@ read_adc = get_adc
 
 
 def get_led() -> machine.Pin:
-    """Gets Pin for on-board LED for Pico W or Pico."""
+    """Get Pin for on-board LED for Pico W or Pico."""
     if is_picow():
         return Pin('LED', Pin.OUT)
     else:
@@ -52,7 +55,7 @@ def get_led() -> machine.Pin:
     
 
 def blink(n:int = 1, delay_ms:int = 100, end_off:bool = None, pin:machine.Pin = None) -> None:
-    """Blinks n times. Stops in a given position.
+    """Blink n times. Stops in a given position.
 
     Args:
       n: n times to blink.
@@ -101,7 +104,7 @@ def blink_error() -> None:
 
 
 def clip(value, min_val=None, max_val=None):
-    """Clips value to a range and cast to the same type."""
+    """Clip value to a range and cast to the same type."""
     dtype = type(value)
     if max_val is not None:
         value = min(max_val, value)
@@ -110,8 +113,33 @@ def clip(value, min_val=None, max_val=None):
     return dtype(value)
 
 
+def fn_avg(fn, n_avg: int = 3, delay_ms: int = 0):
+    """Run function n_avg times with delay_ms and return average value.
+    """
+    n_avg = 3
+    acc = None
+    for i in range(n_avg):
+        data = fn()
+        if acc is None:
+            if isinstance(data, tuple):
+                data = list(data)
+            acc = data
+        else:
+            if isinstance(acc, list):
+                for j, _d in enumerate(data):
+                    acc[j] += _d
+            else:
+                acc += data
+        if delay_ms > 0:
+            time.sleep_ms(delay_ms)
+    if isinstance(acc, list):
+        return [d/n_avg for d in acc]
+    else:
+        return acc / n_avg
+
+
 def init_gc(fraction: float = 0.9) -> None:
-    """Initializes GC."""
+    """Initialize GC."""
     total_memory = gc.mem_alloc() + gc.mem_free()
     threshold = int(total_memory * total_memory)
     gc.threshold(threshold)
@@ -138,5 +166,22 @@ def file_exists(filename: str) -> bool:
         return (os.stat(filename)[0] & 0x4000) == 0
     except OSError:
         return False
+
+
+def get_free_memory() -> FlashStats:
+    """Get internal storage stats.
+
+    See https://docs.micropython.org/en/latest/library/os.html#os.statvfs.
+    """
+    stats = os.statvfs('/')
+    f_frsize = stats[1]
+    f_blocks = stats[2]
+    f_bfree = stats[3]
+    total_memory = f_frsize * f_blocks
+    free_memory = f_frsize * f_bfree
+    return FlashStats(total_memory, free_memory, total_memory-free_memory)
+
+
+
     
     
